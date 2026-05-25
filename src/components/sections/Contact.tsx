@@ -35,12 +35,45 @@ const fieldShell =
 const labelCls = "text-[13px] font-semibold text-[#374151] leading-[15.6px]";
 
 export function Contact() {
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3500);
+    if (submitting) return;
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const payload = {
+      firstName: String(formData.get("firstName") ?? ""),
+      lastName: String(formData.get("lastName") ?? ""),
+      company: String(formData.get("company") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      natureOfEnquiry: String(formData.get("natureOfEnquiry") ?? ""),
+      message: String(formData.get("message") ?? ""),
+    };
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? "Failed to send");
+      }
+      setSubmitted(true);
+      form.reset();
+      setTimeout(() => setSubmitted(false), 4000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -209,16 +242,23 @@ export function Contact() {
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ duration: 0.2 }}
-                className="h-12 inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 text-white text-[15px] font-semibold leading-[18px] hover:bg-brand-600 hover:shadow-[0_10px_28px_rgba(0,75,128,0.35)] transition-all duration-300"
+                disabled={submitting}
+                className="h-12 inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 text-white text-[15px] font-semibold leading-[18px] hover:bg-brand-600 hover:shadow-[0_10px_28px_rgba(0,75,128,0.35)] transition-all duration-300 disabled:bg-brand-500/60 disabled:cursor-not-allowed"
               >
                 {submitted ? (
                   "Thanks — we'll be in touch."
+                ) : submitting ? (
+                  "Sending…"
                 ) : (
                   <>
                     <Send size={16} /> Submit Enquiry
                   </>
                 )}
               </motion.button>
+
+              {error && (
+                <p className="text-sm text-red-600 -mt-2">{error}</p>
+              )}
             </form>
           </Reveal>
         </div>

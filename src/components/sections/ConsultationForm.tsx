@@ -56,12 +56,46 @@ export function ConsultationForm() {
   const [facility, setFacility] = useState("");
   const [service, setService] = useState("");
   const [consent, setConsent] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!consent) return;
-    setSubmitted(true);
+    if (!consent || submitting || submitted) return;
+
+    const formData = new FormData(e.currentTarget);
+    const payload = {
+      firstName: String(formData.get("firstName") ?? ""),
+      lastName: String(formData.get("lastName") ?? ""),
+      organization: String(formData.get("organization") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      phone: String(formData.get("phone") ?? ""),
+      country: String(formData.get("country") ?? ""),
+      facility,
+      service,
+      message: String(formData.get("message") ?? ""),
+      timeline: String(formData.get("timeline") ?? ""),
+    };
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/consultation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? "Failed to send");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -353,10 +387,10 @@ export function ConsultationForm() {
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.98 }}
           transition={{ duration: 0.2 }}
-          disabled={!consent || submitted}
+          disabled={!consent || submitting || submitted}
           className={cn(
             "h-14 inline-flex items-center justify-center gap-2.5 rounded-[10px] text-base font-semibold leading-[19.2px] transition-all duration-300",
-            !consent || submitted
+            !consent || submitting || submitted
               ? "bg-brand-500/40 text-white cursor-not-allowed"
               : "bg-brand-500 text-white shadow-[0_6px_24px_rgba(0,75,128,0.31)] hover:bg-brand-600 hover:shadow-[0_10px_36px_rgba(0,75,128,0.45)]",
           )}
@@ -366,12 +400,18 @@ export function ConsultationForm() {
               <Check size={18} strokeWidth={1.5} /> Request received — we&apos;ll
               be in touch shortly.
             </>
+          ) : submitting ? (
+            <>Sending…</>
           ) : (
             <>
               <Send size={18} strokeWidth={1.5} /> Submit Consultation Request
             </>
           )}
         </motion.button>
+
+        {error && (
+          <p className="text-sm text-red-600 text-center -mt-3">{error}</p>
+        )}
 
         <p className="flex items-center justify-center gap-2 text-xs text-ink-500 leading-[14.4px]">
           <Shield size={13} strokeWidth={1.08} />
