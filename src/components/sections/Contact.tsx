@@ -3,14 +3,14 @@
 import { motion } from "framer-motion";
 import { Reveal } from "@/components/ui/Reveal";
 import { fadeUp } from "@/lib/motion";
-import { Mail, Phone, MapPin, ChevronDown, Send } from "lucide-react";
+import { Mail, Phone, MapPin, ChevronDown, Send, Globe } from "lucide-react";
 import { useState } from "react";
 
 const contactItems = [
   {
     icon: Mail,
     label: "Email",
-    value: "enquiries@flssystemsintegrity.com",
+    value: "info@flsintegrity.com",
   },
   {
     icon: Phone,
@@ -18,10 +18,15 @@ const contactItems = [
     value: "+234 810 991 5990",
   },
   {
-    icon: MapPin,
+    icon: Globe,
     label: "Operations",
     value: "International engagements available",
   },
+  {
+    icon: MapPin,
+    label: "Address",
+    value: "5B, Afolabi Aina street, off Allen Avenue, Ikeja, Lagos, Nigeria.",
+  }
 ];
 
 const fieldShell =

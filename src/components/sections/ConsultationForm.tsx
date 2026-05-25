@@ -53,8 +53,8 @@ const serviceOptions: ServiceOption[] = [
 ];
 
 export function ConsultationForm() {
-  const [facility, setFacility] = useState("hotel");
-  const [service, setService] = useState("audit");
+  const [facility, setFacility] = useState("");
+  const [service, setService] = useState("");
   const [consent, setConsent] = useState(true);
   const [submitted, setSubmitted] = useState(false);
 
